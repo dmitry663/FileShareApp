@@ -1,3 +1,4 @@
+#pyinstaller -w --onefile code/switch/main.py -n "switch"
 import os
 import sys
 import subprocess
