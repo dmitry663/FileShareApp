@@ -1,2 +1,4 @@
 config.txt
+setup.exe
+switch.exe
 end.config

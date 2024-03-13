@@ -1,6 +1,7 @@
+#pyinstaller -w --onefile code/install/main.py -n "setup"
+
 import os
 import sys
-import os.path
 import requests
 
 app_path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Dmitry663", "FileShareApp")
@@ -26,20 +27,12 @@ def main():
             with open(os.path.join(app_path, file_name), 'wb') as file:
                 file.write(response.content)
 
-
+    import subprocess
+    switch_path = [os.path.join(app_path, "switch.exe")]
     if len(sys.argv) > 1:
-        print([arg for arg in sys.argv])
-        #os.system('"C:/Windows/System32/notepad.exe"')
-    # 명령 여부
-    # 명령
-
+        process = subprocess.Popen(switch_path+sys.argv[1:])
     elif len(sys.argv) == 1:
-        print(sys.argv[0])
-        #os.system('"C:/Windows/System32/notepad.exe"')
-    
-    # 자식 프로세스 실행
-    #import subprocess
-    #process = subprocess.Popen(["python", "child_process.py"])
+        process = subprocess.Popen(switch_path)
 
 if __name__ == "__main__":
     main()

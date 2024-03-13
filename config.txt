@@ -1,4 +1,0 @@
-config.txt
-in\in\in\a.txt
-main.exe
-end.config
