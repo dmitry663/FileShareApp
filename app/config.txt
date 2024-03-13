@@ -1,4 +1,5 @@
 config.txt
 setup.exe
 switch.exe
+gui.exe
 end.config
