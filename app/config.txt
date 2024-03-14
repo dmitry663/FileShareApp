@@ -1,4 +1,6 @@
 config.txt
+templates/home.html
+templates/show_folders.html
 setup.exe
 switch.exe
 gui.exe
