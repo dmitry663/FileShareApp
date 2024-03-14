@@ -2,7 +2,7 @@ import os
 import sys
 import json
 
-file_path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Dmitry663", "FileShareApp", "gui.exe")
+file_path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Dmitry663", "FileShareApp", "data.config")
 
 def save_json(data, file_path = file_path):
     with open(file_path, 'w') as outfile:
@@ -21,12 +21,6 @@ def initialize():
         save_json(data)
     return data
 
-def start():
-    pass
-
-def stop():
-    pass
-
 def create(path, port):
     data = initialize()
     if data['count'] < data['size']:
@@ -36,15 +30,49 @@ def create(path, port):
 
 def rm(no):
     data = initialize()
-    if no < data['count']:
+    if no < data['count'] and data['token'][no]["run"] == False:
         data['count'] -= 1
         del data['token'][no]
         save_json(data)
 
-def modify():
-    pass
+def modify(no, port):
+    data = initialize()
+    if no < data['count'] and data['token'][no]["run"] == False:
+        data['token'][no]["port"] = port
+        save_json(data)
+
+def ps(all=False):
+    data = initialize()
+    if all:
+        return data['token']
+    else:
+        return [d for d in data['token'] if d["run"] == True]
+  
+import subprocess
+
+service_app_path =  os.path.join(os.path.expanduser("~"), "AppData", "Local", "Dmitry663", "FileShareApp", "service.exe")
+
+def start(no):
+    data = initialize()
+    if not data['token'][no]["run"]:
+        data['token'][no]["run"] == True
+        data['state']+=1
+        process = subprocess.Popen([service_app_path, no])
+
+def stop(no):
+    data = initialize()
+    if data['token'][no]["run"]:
+        data['token'][no]["run"] == False
+        data['state']-=1
 
 def boot():
+    data = initialize()
+    if data['state']:
+        for token in data['token']:
+            if token["run"]:
+                if cak:
+                    pass
+                
     pass
 
 

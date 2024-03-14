@@ -1,0 +1,78 @@
+<!-- templates/show_folders.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+    </head>
+    <body>
+        <h1>파일 업로드</h1>
+    
+        <form action="{{ url_for('upload_file',folders=path) }}" method="post" enctype="multipart/form-data">
+            <input type="file" name="file">
+            <input type="submit" value="업로드">
+        </form>
+
+        <table border="1">
+            <colgroup>
+                <col style="width: 300px;">
+                <col style="width: 50px;">
+                <col>
+            </colgroup>
+            <tr>
+                <th>이름</th>
+                <th>크기</th>
+                <th>다운로드</th>
+            </tr>
+            {% for item in items %}
+            {% if item.is_directory %}
+            <tr>
+                <td>폴더: <a href="{{ clean_up_path(url_for('show_folders', folders=path+'/'+item.name)) }}">{{ item.name }}</a></td>
+                <td>{{ item.size }}</td>
+                <td><a href="{{ clean_up_path(url_for('download_folders', folders=path+'/'+item.name)) }}" download>다운로드</a></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td>파일: {{ item.name }}</td>
+                <td>{{ item.size }}</td>
+                <td><a href="{{ clean_up_path(url_for('download_file', folders=path, filename=item.name)) }}" download>다운로드</a></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </table>
+    </body>
+</html>
+
+
+
+<!-- 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>폴더 보기</title>
+</head>
+<body>
+    <h1>경로: {{ path }}</h1>
+    
+    <!-- 파일 업로드 양식 추가 --><!-- 
+    <form action="{{ url_for('upload_file', folders=path) }}" method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit" value="업로드">
+    </form>
+    
+    <ul>
+        {% for item in items %}
+            <li>
+                {% if item.is_directory %}
+                    <a href="{{ url_for('show_folders', folders=path+'/'+item.name) }}">{{ item.name }}/</a>
+                {% else %}
+                    <a href="{{ url_for('download_file', folders=path, filename=item.name) }}" download>{{ item.name }}</a>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html> -->
