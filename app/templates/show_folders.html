@@ -3,27 +3,27 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     </head>
     <body>
         <h1>디렉토리 {{ path }}</h1>
         <div>
             {% if path == "" %}
-            <form action="{{ url_for('upload_file_root') }}" method="post" enctype="multipart/form-data">
-                <input type="file" name="file">
-                <input type="submit" value="업로드">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="file" name="file" id="fileInput">
+                <input type="button" value="업로드" onclick="uploadFile('{{ url_for('upload_file_root') }}')">
             </form>
             {% else %}
-            <form action="{{ url_for('upload_file',folders=path) }}" method="post" enctype="multipart/form-data">
-                <input type="file" name="file">
-                <input type="submit" value="업로드">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="file" name="file" id="fileInput">
+                <input type="button" value="업로드" onclick="uploadFile('{{ url_for('upload_file',folders=path) }}')">
             </form>
             {% endif %}
         </div>
         <div>
-            <form action="{{ url_for('upload_file',folders=path) }}" method="post" enctype="multipart/form-data">
-                <input type="submit" value="폴더 생성">
-                <input type="text" name="single_line_input">
+            <form id="addfolderForm" enctype="multipart/form-data">
+                <input type="button" value="폴더 생성" onclick="addFolder('{{ clean_up_path(url_for('add_folder',folders=path)) }}')">
+                <input type="text" name="folder_name" id="folderInput">
             </form>
         </div>
         <div>
@@ -48,15 +48,70 @@
                     {% endif %}
                     <td>{{ item.size }}</td>
                     <td><a href="{{ clean_up_path(url_for('download', path=path+'/'+item.name)) }}" download>다운로드</a></td>
-                    <td><a href="{{ clean_up_path(url_for('delete', path=path+'/'+item.name)) }}">삭제</a></td>
+                    <td><a href="#" onclick="deleteItem('{{ clean_up_path(url_for('delete', path=path+'/'+item.name)) }}')">삭제</a></td>
+
                 </tr>
                 {% endfor %}
             </table>
         </div>
         <script>
-            function deleteFile() {
-                location.reload();
+            function addFolder(url_path) {
+                var formData = new FormData();
+                formData.append("folder_name", $("#folderInput").val());
+                
+                $.ajax({
+                    url: url_path,
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        alert("폴더가 성공적으로 생성되었습니다!");
+                    },
+                    error: function(xhr, status, error) {
+                        alert("폴더 생성 중 오류가 발생했습니다.");
+                        console.error(error);
+                    }
+                });
+                refreshPage()
             }
+            function uploadFile(url_path) {
+                var formData = new FormData();
+                formData.append("file", $("#fileInput")[0].files[0]);
+    
+                $.ajax({
+                    url: url_path,
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        alert("파일이 성공적으로 업로드되었습니다!");
+                    },
+                    error: function(xhr, status, error) {
+                        alert("파일 업로드 중 오류가 발생했습니다.");
+                        console.error(error);
+                }
+                });
+                refreshPage()
+            }
+            function deleteItem(url_path) {
+                if (confirm("정말로 삭제하시겠습니까?")) {
+                    $.ajax({
+                        url: url_path,
+                        type: 'GET',
+                        success: function(response) {
+                            alert("삭제되었습니다.");
+                            location.reload();
+                        },
+                        error: function(xhr, status, error) {
+                            alert("삭제 중 오류가 발생했습니다.");
+                            console.error(error);
+                        }
+                    });
+                }
+            }
+
             function refreshPage() {
                 location.reload();
             }

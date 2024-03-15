@@ -135,19 +135,27 @@ def delete(path=""):
 def delete_file(file_path):
     try:
         os.remove(file_path)
-        print(f"{file_path}를 삭제했습니다.")
+        # print(f"{file_path}를 삭제했습니다.")
     except FileNotFoundError:
-        print(f"{file_path}를 찾을 수 없습니다.")
+        # print(f"{file_path}를 찾을 수 없습니다.")
+        pass
 
 def delete_folder(folder_path):
     try:
         os.rmdir(folder_path)
-        print(f"{folder_path}를 삭제했습니다.")
+        # print(f"{folder_path}를 삭제했습니다.")
     except FileNotFoundError:
-        print(f"{folder_path}를 찾을 수 없습니다.")
+        # print(f"{folder_path}를 찾을 수 없습니다.")
+        pass
     except OSError:
-        print(f"{folder_path}는 비어있지 않거나 권한이 없어 삭제할 수 없습니다.")
+        # print(f"{folder_path}는 비어있지 않거나 권한이 없어 삭제할 수 없습니다.")
+        pass
 
-def add_folder(folders=""):
-    os.mkdir(os.path.join(env.templates_folder_path, folders, "새폴더"))
+def add_folder(folders, new_folders):
+    if folders == "":
+        full_path = os.path.join(arg.service_folder_path, new_folders)
+    else:
+        full_path = os.path.join(arg.service_folder_path, folders, new_folders)
+    print(os.path.join(arg.service_folder_path, new_folders))
+    os.mkdir(full_path)
     return "add_folder"

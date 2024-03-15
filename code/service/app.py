@@ -32,26 +32,29 @@ def download(path):
     
 @app.route('/upload/file', methods=['POST'], strict_slashes=False)
 def upload_file_root():
-    file.upload_file()
-    return show_folders_root()
+    return file.upload_file()
 
 @app.route('/upload/file/<path:folders>', methods=['POST'], strict_slashes=False)
 def upload_file(folders):
-    file.upload_file(folders)
-    return show_folders(folders)
+    return file.upload_file(folders)
 
 @app.route('/delete/file/<path:path>', strict_slashes=False)
 def delete(path):
-    file.delete(path)
-    if len(path.split('/')) == 1:
-        return show_folders_root()
-    else:
-        return show_folders('/'.join(path.split('/')[:-1]))
+    return file.delete(path)
 
-@app.route('/add/folder/<path:folders>', strict_slashes=False)
+@app.route('/add/folder', methods=['POST'], strict_slashes=False)
+def add_folder_root():
+    new_folders = request.form.get('folder_name')
+    return file.add_folder("", new_folders)
+
+@app.route('/add/folder/<path:folders>', methods=['POST'], strict_slashes=False)
 def add_folder(folders):
-    file.add_folder(folders)
-    return show_folders(folders)
+    new_folders = request.form.get('folder_name')
+    print(new_folders)
+    return file.add_folder(folders, new_folders)
 
+def main(host_name, server_port, service_folder):
+    app.run(host=host_name, port=server_port)
+    
 if __name__ == '__main__':
     app.run(host='127.0.0.1', debug=True)
