@@ -1,3 +1,5 @@
+# pyinstaller --onefile code/service/main.py -n "service"
+
 import env
 import arg
 import app

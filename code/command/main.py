@@ -1,83 +1,121 @@
 import os
 import sys
 import json
+import subprocess
+import psutil
 
-file_path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Dmitry663", "FileShareApp", "data.config")
+file_path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Dmitry663", "FileShareApp", "FileShareApp.json")
+background_app_path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Dmitry663", "FileShareApp", "background.exe")
+service_app_path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Dmitry663", "FileShareApp", "service.exe")
+class FileShareApp:
+    def __init__(self, data):
+        self.size = data['size']
+        self.count = data['count']
+        self.token = [Bio(token) for token in data['token']]
+
+    def get(self):
+        return {'size':self.size, 'count':self.count, 'token':[token.get() for token in self.token]}
+class Bio:
+    def __init__(self, data):
+        self.path = data["path"]
+        self.port = data["port"]
+        self.run = data["run"]
+
+    def get(self):
+        return {'path':self.path, 'port':self.port, 'run':self.run}
 
 def save_json(data, file_path = file_path):
     with open(file_path, 'w') as outfile:
         json.dump(data, outfile)
 
-def initialize():
-    if os.path.isfile(file_path):
+def read_json(file_path):
+    data = None
+    if os.path.isfile(file_path) and os.path.getsize(file_path) > 0:
         with open(file_path, "r") as json_file:
             data = json.load(json_file)
-    else:
-        data = {}
-        data['size'] = 5
-        data['count'] = 0
-        data['state'] = 0
-        data['token'] = []
-        save_json(data)
     return data
 
-def create(path, port):
+def initialize():
+    json_data = read_json(file_path)
+    if json_data:
+        data = FileShareApp(json_data)
+    else:
+        data = FileShareApp({'size':5, 'count':0, 'token':[]})
+        save_json(data.get())
+    return data
+
+def ps():
     data = initialize()
-    if data['count'] < data['size']:
-        data['count'] += 1
-        data['token'].append({"path":path, "port":port, "run":False})
-        save_json(data)
+    for token in data.token:
+        print("실행중" if token.run else "----", token.port, token.path)
+
+def create(path, port):
+    if 0 <= port <= 65535 and os.path.isdir(path):
+        data = initialize()
+        if len(data.token) < data.size:
+            data.token.append(Bio({"path":path, "port":port, "run":False}))
+            save_json(data.get())
+        else:
+            print("생성할 수 있는 토큰을 넘었음")
+    elif 0 > port or port > 65535:
+        print("포트 범위 초과 0 ~ 65535")
+    elif not os.path.isdir(path):
+        print("디렉토리 없음")
 
 def rm(no):
     data = initialize()
-    if no < data['count'] and data['token'][no]["run"] == False:
-        data['count'] -= 1
-        del data['token'][no]
-        save_json(data)
+    if no < len(data.token) and data.token[no].run == False:
+        del data.token[no]
+        save_json(data.get())
+    elif not no < len(data.token):
+        print("토큰 범위 초과")
+    elif data.token[no].run == True:
+        print("토큰이 실행 중")
 
 def modify(no, port):
     data = initialize()
-    if no < data['count'] and data['token'][no]["run"] == False:
-        data['token'][no]["port"] = port
-        save_json(data)
-
-def ps(all=False):
-    data = initialize()
-    if all:
-        return data['token']
-    else:
-        return [d for d in data['token'] if d["run"] == True]
-  
-import subprocess
-
-service_app_path =  os.path.join(os.path.expanduser("~"), "AppData", "Local", "Dmitry663", "FileShareApp", "service.exe")
+    if no < len(data.token) and data.token[no].run == False:
+        data.token[no].port = port
+        save_json(data.get())
+    elif not no < len(data.token):
+        print("토큰 범위 초과")
+    elif data.token[no].run == True:
+        print("토큰이 실행 중")
 
 def start(no):
     data = initialize()
-    if not data['token'][no]["run"]:
-        data['token'][no]["run"] == True
-        data['state']+=1
-        process = subprocess.Popen([service_app_path, no])
+    if no < len(data.token) and data.token[no].run == False:
+        data.token[no].run = True
+        data.count += 1
+        save_json(data.get())
+        process = subprocess.Popen([background_app_path, service_app_path, "-p", data.token[no].port, "-v", data.token[no].path])
+    elif not no < len(data.token):
+        print("토큰 범위 초과")
+    elif data.token[no].run == True:
+        print("토큰이 실행 중")
 
 def stop(no):
     data = initialize()
-    if data['token'][no]["run"]:
-        data['token'][no]["run"] == False
-        data['state']-=1
+    if no < len(data.token) and data.token[no].run == True:
+        for proc in psutil.process_iter(['pid', 'cmdline']):
+            if proc.info['cmdline'] and " ".join([service_app_path, "-p", data.token[no].port, "-v", data.token[no].path]) in ' '.join(proc.info['cmdline']):
+                # 해당 명령어를 실행한 프로세스 종료
+                proc.terminate()
+        data.token[no].run = False
+        data.count -= 1
+        save_json(data.get())
+    elif not no < len(data.token):
+        print("토큰 범위 초과")
+    elif data.token[no].run == False:
+        print("토큰이 실행 중이 아님")
 
 def boot():
     data = initialize()
-    if data['state']:
-        for token in data['token']:
-            if token["run"]:
-                if cak:
-                    pass
-                
-    pass
-
-
-
-
+    if data.count:
+        for token in data.token:
+            if token.run:
+                stop(data.token.index(token))
+                start(data.token.index(token))
 
 def main():
     if len(sys.argv)<2:
@@ -85,41 +123,19 @@ def main():
     elif sys.argv[1] in ["-h", "--help"]:
         pass
     elif sys.argv[1] in ["boot"]:
-        pass
+        boot()
     elif sys.argv[1] in ["ps"]:
-        if len(sys.argv)<3:
-            # 현재 실행 중인 프로세스
-            pass
-        elif sys.argv[2] in ["-a"]:
-            # 모든 프로세스
-            pass
-        else:
-            # 잘못된 경우
-            pass
-    elif sys.argv[1] in ["stop"]:
-        if len(sys.argv)<3:
-            # 잘못된 경우
-            pass
-        else:
-            for pin in sys.argv[2:]:
-                #stop(pin)
-                pass
+        ps()
     elif sys.argv[1] in ["start"]:
-        if len(sys.argv)<3:
-            # 잘못된 경우
-            pass
-        else:
-            for pin in sys.argv[2:]:
-                #stop(pin)
-                pass
-        pass
+        start(int(sys.argv[2]))
+    elif sys.argv[1] in ["stop"]:
+        stop(int(sys.argv[2]))
     elif sys.argv[1] in ["rm"]:
-        pass
+        rm(int(sys.argv[2]))
     elif sys.argv[1] in ["create"]:
-
-        pass
+        create(sys.argv[3], int(sys.argv[2]))
     elif sys.argv[1] in ["modify"]:
-        pass
+        modify(int(sys.argv[2]), int(sys.argv[3]))
     else:
         pass
 

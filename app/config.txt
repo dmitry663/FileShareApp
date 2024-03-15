@@ -1,8 +1,0 @@
-config.txt
-templates/home.html
-templates/show_folders.html
-service.exe
-setup.exe
-switch.exe
-gui.exe
-end.config
