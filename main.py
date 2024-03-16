@@ -1,6 +1,23 @@
+def is_number(self):
+    try:
+        float(self.get())
+        return True
+    except ValueError:
+        return False
+        
+
 import os
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import messagebox
+import subprocess
+
+file_path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Dmitry663", "FileShareApp", "FileShareApp.json")
+background_app_path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Dmitry663", "FileShareApp", "background.exe")
+command_app_path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Dmitry663", "FileShareApp", "command.exe")
+
+def show_alert(text):
+    messagebox.showinfo("알림", text)
 
 class InputLabel:
     def __init__(self, root, title):
@@ -42,6 +59,13 @@ class InputText:
     def get(self):
         return self.entry.get()
     
+    def is_number(self):
+        try:
+            float(self.get())
+            return True
+        except ValueError:
+            return False
+    
 class FolderSelect:
     def __init__(self, root):
         self.root = root
@@ -54,17 +78,18 @@ class FolderSelect:
 
         # 선택된 폴더 경로를 표시하는 레이블
         self.value = tk.StringVar()
-        self.folder_label = tk.Label(self.frame, text="없음", textvariable=self.value, width = 30, anchor="w", justify="left")
+        self.folder_label = tk.Label(self.frame, textvariable=self.value, width = 30, anchor="w", justify="left")
         self.folder_label.grid(row = 0, column = 1)
+        self.value.set("없음")
 
         # 폴더 선택 버튼
         self.select_button = tk.Button(self.frame, text="폴더 선택", command=self.select_folder)
         self.select_button.grid(row = 0, column = 2)
 
     def select_folder(self):
-        self.folder_path = filedialog.askdirectory()
-        if self.folder_path:
-            self.folder_label.config(text=f"{self.folder_path}")
+        folder_path = filedialog.askdirectory()
+        if folder_path:
+            self.set(folder_path)
             # GUI를 가장 위로 가져오기
             self.root.lift()
 
@@ -72,7 +97,7 @@ class FolderSelect:
         self.value.set(text)
     
     def get(self):
-        return self.folder_path
+        return self.value.get()
 
 class FileShareSet:
     def __init__(self, root, no, ):
@@ -89,7 +114,7 @@ class FileShareSet:
         self.select_folder = FolderSelect(self.frame)
         self.port_text = InputText(self.frame, "포트")
 
-        self.save_button = tk.Button(self.frame, text="저장")
+        self.save_button = tk.Button(self.frame, text="저장", command=self.save)
         self.save_button.pack(anchor="w")
 
     def set(self, no, path, port):
@@ -97,10 +122,22 @@ class FileShareSet:
         self.select_folder.set(path)
         self.port_text.set(port)
     
-    def get():
-        
-    def save():
-        result = os.popen(command).read()
+    def get(self):
+        port = self.port_text.get()
+        path = self.select_folder.get()
+        return {"port":port, "path":path}
+    
+    def save(self):
+        data = self.get()
+        if not self.port_text.is_number():
+            show_alert("포트는 숫자를 입력")
+        elif 0 > int(data["port"]) and int(data["port"]) > 65535:
+            show_alert("포트는 0 ~ 65535")
+        elif not os.path.isdir(data["path"]):
+            show_alert("없는 폴더")
+        else:
+            process = subprocess.Popen([background_app_path, command_app_path, "create", data["port"], data["path"]])
+
 
     def refresh():
         pass
@@ -112,20 +149,6 @@ class FileShareApp:
 
         self.file_share_set = FileShareSet(root,0)
 
-        a = InputLabel(root, "InputLabel")
-        a.set("0000")
-
-        self.b = InputText(root, "InputText")
-        self.b.set(a.get() + "0000")
-        a.set(self.b.get() + "0000")
-        
-        self.c = FolderSelect(root)
-        self.save_button = tk.Button(root, text="저장", command=self.save)
-        self.save_button.pack(anchor="w")
-    def save(self):
-        self.c.set(self.b.get())
-        #self.b.set(self.c.get())
-        pass
 def main():
     root = tk.Tk()
     app = FileShareApp(root)
