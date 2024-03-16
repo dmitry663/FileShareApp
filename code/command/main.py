@@ -1,3 +1,5 @@
+# pyinstaller --onefile code/command/main.py -n "command"
+
 import os
 import sys
 import json
@@ -88,7 +90,7 @@ def start(no):
         data.token[no].run = True
         data.count += 1
         save_json(data.get())
-        process = subprocess.Popen([background_app_path, service_app_path, "-p", data.token[no].port, "-v", data.token[no].path])
+        process = subprocess.Popen([background_app_path, service_app_path, "-p", str(data.token[no].port), "-v", data.token[no].path])
     elif not no < len(data.token):
         print("토큰 범위 초과")
     elif data.token[no].run == True:
@@ -98,7 +100,7 @@ def stop(no):
     data = initialize()
     if no < len(data.token) and data.token[no].run == True:
         for proc in psutil.process_iter(['pid', 'cmdline']):
-            if proc.info['cmdline'] and " ".join([service_app_path, "-p", data.token[no].port, "-v", data.token[no].path]) in ' '.join(proc.info['cmdline']):
+            if proc.info['cmdline'] and " ".join([service_app_path, "-p", str(data.token[no].port), "-v", data.token[no].path]) in ' '.join(proc.info['cmdline']):
                 # 해당 명령어를 실행한 프로세스 종료
                 proc.terminate()
         data.token[no].run = False
